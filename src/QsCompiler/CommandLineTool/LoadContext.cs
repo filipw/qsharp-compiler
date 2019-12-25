@@ -48,6 +48,7 @@ namespace Microsoft.Quantum.QsCompiler
 
         protected override Assembly Load(AssemblyName name)
         {
+            Console.WriteLine($"CONTEXT {this.PathToParentAssembly}: LOADING {name.FullName}");
             string path = _Resolver.ResolveAssemblyToPath(name);
             return path == null ? null : LoadFromAssemblyPath(path);
         }
@@ -74,6 +75,7 @@ namespace Microsoft.Quantum.QsCompiler
                 try { found.AddRange(Directory.GetFiles(dir, "*.dll", SearchOption.AllDirectories).Where(MatchByName)); }
                 catch { continue; }
             }
+            Console.WriteLine($"CONTEXT {this.PathToParentAssembly}: POSSIBLE MATCHES FOR {name.FullName} ARE {String.Join(", ", found)}");
             if (found.Count <= 1 || name.Version == null) return found.FirstOrDefault();
 
             var tempContext = new LoadContext(this.PathToParentAssembly);
@@ -91,7 +93,7 @@ namespace Microsoft.Quantum.QsCompiler
                 catch { continue; }
             }
             if (tempContext.IsCollectible) tempContext.Unload();
-            return null;
+            return found.FirstOrDefault(); // todo: better option
         }
 
         /// <summary>
@@ -101,7 +103,12 @@ namespace Microsoft.Quantum.QsCompiler
         /// </summary>
         private Assembly OnResolving(AssemblyLoadContext context, AssemblyName name)
         {
+            Console.WriteLine($"CONTEXT {this.PathToParentAssembly}: FAILED TO RESOLVE {name.FullName}");
             var path = this.ResolveFromFallbackPaths(name);
+            if (path == null)
+            {
+                Console.WriteLine($"CONTEXT {this.PathToParentAssembly}: LOADING FROM FALLBACK FAILED FOR {name.FullName}");
+            }
             return path == null ? null : LoadFromAssemblyPath(path);
         }
 
