@@ -7,11 +7,6 @@
     </MSBuildAllProjects>
   </PropertyGroup>
 
-  <!-- We want to keep this here as fallback to mitigate issues when loading qsc references. -->
-  <PropertyGroup>
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-  </PropertyGroup>
-
   <Import Project="$(MSBuildThisFileDirectory)../DefaultItems/DefaultItems.targets"/>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk"/>
   <Import Project="$(MSBuildThisFileDirectory)../ProjectSystem/ProjectSystem.targets"/>
@@ -48,25 +43,7 @@
   <!-- Invokes the Q# command line compiler to build the project. -->
   <Target Name="QsharpCompile" 
           DependsOnTargets="ResolveAssemblyReferences;ResolveQscReferences;BeforeQsharpCompile;_CopyFilesMarkedCopyLocal" 
-          BeforeTargets="BeforeCsharpCompile;BeforeBuild"
-          Inputs="$(MSBuildAllProjects);
-                  @(QsharpCompile);
-                  @(ReferencePath);
-                  @(ResolvedQscReferences);
-                  @(ResolvedQscReferencesAndPriorities);
-                  $(PathCompatibleAssemblyName);
-                  $(GeneratedFilesOutputPath);
-                  $(QscBuildConfigOutputPath);
-                  $(QsharpDocsOutputPath);
-                  $(QsharpDocsGeneration);
-                  $(CsharpGeneration);
-                  $(QscBuildConfigExe);
-                  $(QscExe)"
-          Outputs="@(ResolvedQsharpReferences);
-                  @(Compile);
-                  $(QscBuildConfigGeneration);
-                  $(QscCommand);
-                  $(GeneratedFilesOutputPath)$(PathCompatibleAssemblyName).bson">
+          BeforeTargets="BeforeCsharpCompile;BeforeBuild">
     <MakeDir Directories="$(GeneratedFilesOutputPath)" />
     <MakeDir Directories="$(QscBuildConfigOutputPath)" />
     <MakeDir Condition="$(QsharpDocsGeneration)" Directories="$(QsharpDocsOutputPath)" />
@@ -100,7 +77,7 @@
     <Exec Command="$(QscCommand)" IgnoreExitCode="false" /> 
     <!-- configure the dll built by the C# compiler -->
     <ItemGroup>
-      <EmbeddedResource Include="$(GeneratedFilesOutputPath)$(PathCompatibleAssemblyName).bson" LogicalName="__qsharp_data__.bson" Visible="false" />
+      <EmbeddedResource Include="$(_EmittedBinaryPath)" LogicalName="__qsharp_data__.bson" Visible="false" />
       <Compile Condition="$(CsharpGeneration)" Include="$(GeneratedFilesOutputPath)**/*.g.cs" Exclude="@(Compile)" AutoGen="true" />
     </ItemGroup>
   </Target>   
