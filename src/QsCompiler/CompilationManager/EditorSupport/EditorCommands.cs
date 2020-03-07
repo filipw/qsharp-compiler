@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.Serialization;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder.DataStructures;
 using Microsoft.Quantum.QsCompiler.DataTypes;
 using Microsoft.Quantum.QsCompiler.SyntaxProcessing;
@@ -17,6 +18,19 @@ using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.Quantum.QsCompiler.CompilationBuilder
 {
+    [DataContract]
+    public class CodeLensData
+    {
+        [DataMember(Name = "location")]
+        public Location Location { get; set; }
+        
+        /// <summary>
+        /// The text document that the original completion request was made from.
+        /// </summary>
+        [DataMember(Name = "textDocument")]
+        public TextDocumentIdentifier TextDocument { get; set; }
+    }
+
     internal static class EditorCommands
     {
         /// <summary>
@@ -30,6 +44,14 @@ namespace Microsoft.Quantum.QsCompiler.CompilationBuilder
             var typeDeclarations = file.TypeDeclarationsSymbolInfo();
             var callableDeclarations = file.CallableDeclarationsSymbolInfo();
             return namespaceDeclarations.Concat(typeDeclarations).Concat(callableDeclarations).ToArray();
+        }
+
+        public static SymbolInformation[] TypeAndMethodDeclarations(this FileContentManager file)
+        {
+            if (file == null) return Array.Empty<SymbolInformation>();
+            var typeDeclarations = file.TypeDeclarationsSymbolInfo();
+            var callableDeclarations = file.CallableDeclarationsSymbolInfo();
+            return callableDeclarations.Concat(typeDeclarations).ToArray();
         }
 
         /// <summary>

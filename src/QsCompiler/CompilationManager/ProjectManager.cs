@@ -891,6 +891,32 @@ namespace Microsoft.Quantum.QsCompiler.CompilationBuilder
             this.Manager(param?.TextDocument?.Uri)?.FileQuery
                 (param?.TextDocument, (file, c) => file.SymbolReferences(c, param?.Position, param.Context), suppressExceptionLogging: true);
 
+        public CodeLens[] CodeLens(CodeLensParams param) =>
+            this.Manager(param?.TextDocument?.Uri)?.FileQuery
+                (param?.TextDocument, (file, c) => file.TypeAndMethodDeclarations().Select(s =>
+                {
+                    return new CodeLens
+                    {
+                        Command = new Command
+                        {
+                            Title = "references",
+                            CommandIdentifier = "editor.action.showReferences",
+                            Arguments = new object[]
+                            {
+                                param.TextDocument.Uri,
+                                s.Location.Range.Start,
+                                new Location[0]
+                            }
+                        },
+                        Range = s.Location.Range,
+                        Data = new CodeLensData
+                        {
+                            TextDocument = param.TextDocument,
+                            Location = s.Location
+                        },
+                    };
+                }).ToArray(), suppressExceptionLogging: true);
+
         /// <summary>
         /// Returns the SymbolInformation for each namespace declaration, 
         /// type declaration, and function or operation declaration within the specified file.

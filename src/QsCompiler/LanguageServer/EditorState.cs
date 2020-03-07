@@ -342,6 +342,13 @@ namespace Microsoft.Quantum.QsLanguageServer
         public Location[] SymbolReferences(ReferenceParams param) =>
             ValidFileUri(param?.TextDocument?.Uri) && !IgnoreFile(param.TextDocument.Uri) ? this.Projects.SymbolReferences(param) : null;
 
+        //public CodeLens SymbolReferences(CodeLens param) =>
+        //    ValidFileUri(param?.TextDocument?.Uri) && !IgnoreFile(param.TextDocument.Uri) ? this.Projects.SymbolReferences(param) : null;
+
+
+        public CodeLens[] CodeLens(CodeLensParams param) =>
+            ValidFileUri(param?.TextDocument?.Uri) && !IgnoreFile(param.TextDocument.Uri) ? this.Projects.CodeLens(param) : null;
+
         /// <summary>
         /// Returns the SymbolInformation for each namespace declaration, type declaration, and function or operation declaration.
         /// Returns null if the given file is listed as to be ignored, or if the given parameter or its uri is null.

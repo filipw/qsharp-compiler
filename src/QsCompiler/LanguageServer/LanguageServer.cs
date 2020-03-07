@@ -198,6 +198,7 @@ namespace Microsoft.Quantum.QsLanguageServer
             capabilities.RenameProvider = true;
             capabilities.HoverProvider = true;
             capabilities.DocumentHighlightProvider = true;
+            capabilities.CodeLensProvider = new CodeLensOptions { ResolveProvider = true };
             capabilities.SignatureHelpProvider.TriggerCharacters = new[] { "(", "," };
             capabilities.ExecuteCommandProvider.Commands = new[] { CommandIds.ApplyEdit }; // do not declare internal capabilities
             if (capabilities.CompletionProvider != null)
@@ -326,6 +327,50 @@ namespace Microsoft.Quantum.QsLanguageServer
                 "FindReferences threw an exception");
             }
             catch { return new Location[0]; }
+        }
+
+        [JsonRpcMethod(Methods.TextDocumentCodeLensName)]
+        public object OnTextDocumentCodeLens(JToken arg)
+        {
+            if (WaitForInit != null) return ProtocolError.AwaitingInitialization;
+            var param = Utils.TryJTokenAs<CodeLensParams>(arg);
+            try
+            {
+                return QsCompilerError.RaiseOnFailure(() =>
+                this.EditorState.CodeLens(param) ?? new CodeLens[0],
+                "CodeLens threw an exception");
+            }
+            catch { return new CodeLens[0]; }
+        }
+
+        [JsonRpcMethod(Methods.CodeLensResolveName)]
+        public object OnCodeLensResolve(JToken arg)
+        {
+            if (WaitForInit != null) return ProtocolError.AwaitingInitialization;
+            var param = Utils.TryJTokenAs<CodeLens>(arg);
+            try
+            {
+                return QsCompilerError.RaiseOnFailure(() =>
+                {
+                    var data = Utils.TryJTokenAs<CodeLensData>(JToken.FromObject(param?.Data));
+
+                    var locations = this.EditorState.SymbolReferences(new ReferenceParams
+                    {
+                        TextDocument = data.TextDocument,
+                        Position = data.Location.Range.Start
+                    }) ?? new Location[0];
+
+                    param.Command.Title = locations.Length + " references";
+
+                    var args = param.Command.Arguments;
+                    Array.Resize(ref args, args.Length+1);
+                    args[args.Length - 1] = locations;
+
+                    param.Command.Arguments = args;
+                    return param;
+                }, "CodeLens resolve threw an exception");
+            }
+            catch { return new CodeLens(); }
         }
 
         [JsonRpcMethod(Methods.TextDocumentHoverName)]
