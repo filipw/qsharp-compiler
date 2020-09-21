@@ -78,7 +78,7 @@ namespace Microsoft.Quantum.QsCompiler
         public static event CompilationTaskEventHandler CompilationTaskEvent;
 
         /// <summary>
-        /// If LoadAssembly is not null, it will be used to load the dlls that are search for classes defining rewrite steps.
+        /// If LoadAssembly is not null, it will be used to load the DLLs that are searched for classes defining rewrite steps.
         /// </summary>
         public static Func<string, Assembly> LoadAssembly { get; set; }
 
