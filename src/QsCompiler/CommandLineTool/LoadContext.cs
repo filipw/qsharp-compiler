@@ -21,7 +21,7 @@ namespace Microsoft.Quantum.QsCompiler
     /// </summary>
     public class LoadContext : AssemblyLoadContext
     {
-        public readonly string PathToParentAssembly;
+        private readonly string pathToParentAssembly;
         private readonly AssemblyDependencyResolver resolver;
         private readonly HashSet<string> fallbackPaths;
 
@@ -37,10 +37,11 @@ namespace Microsoft.Quantum.QsCompiler
         public void RemoveFromPath(params string[] paths) =>
             this.fallbackPaths.RemoveWhere(paths.Contains);
 
-        private LoadContext(string parentAssembly)
+        private LoadContext(string parentAssembly) :
+            base(isCollectible: true)
         {
-            this.PathToParentAssembly = parentAssembly ?? throw new ArgumentNullException(nameof(parentAssembly));
-            this.resolver = new AssemblyDependencyResolver(this.PathToParentAssembly);
+            this.pathToParentAssembly = parentAssembly ?? throw new ArgumentNullException(nameof(parentAssembly));
+            this.resolver = new AssemblyDependencyResolver(this.pathToParentAssembly);
             this.fallbackPaths = new HashSet<string>();
             this.Resolving += this.OnResolving;
         }
@@ -86,7 +87,7 @@ namespace Microsoft.Quantum.QsCompiler
                 return found.FirstOrDefault();
             }
 
-            var tempContext = new LoadContext(this.PathToParentAssembly);
+            var tempContext = new LoadContext(this.pathToParentAssembly);
             var versions = new List<(string, Version)>();
             foreach (var file in found)
             {
